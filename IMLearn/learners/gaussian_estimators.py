@@ -1,6 +1,16 @@
 from __future__ import annotations
 import numpy as np
 from numpy.linalg import inv, det, slogdet
+from numpy import random
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+import pandas as pd
+
+from scipy import stats
+from scipy.optimize import curve_fit
+from scipy import asarray as ar,exp
 
 
 class UnivariateGaussian:
@@ -30,6 +40,8 @@ class UnivariateGaussian:
             Estimated variance initialized as None. To be set in `UnivariateGaussian.fit`
             function.
         """
+        self.samples_= np.random.normal(10, 1, 1000)  
+
         self.biased_ = biased_var
         self.fitted_, self.mu_, self.var_ = False, None, None
 
@@ -51,7 +63,16 @@ class UnivariateGaussian:
         Sets `self.mu_`, `self.var_` attributes according to calculated estimation (where
         estimator is either biased or unbiased). Then sets `self.fitted_` attribute to `True`
         """
-        raise NotImplementedError()
+        # # raise NotImplementedError()
+        # if (self.biased_) : 
+        #     self.mu_ = 0 #todo
+        #     self.var_ = 0
+        # else:
+        #     self.mu_ = 0 #todo
+        #     self.var_ = 0
+
+        hist, bin_edges = np.histogram(self.samples_)
+    
 
         self.fitted_ = True
         return self
