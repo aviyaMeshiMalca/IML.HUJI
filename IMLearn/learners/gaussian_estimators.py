@@ -5,12 +5,12 @@ from numpy import random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 import pandas as pd
-
 from scipy import stats
+from scipy.stats import norm
 from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
+import sys
 
 
 class UnivariateGaussian:
@@ -40,7 +40,6 @@ class UnivariateGaussian:
             Estimated variance initialized as None. To be set in `UnivariateGaussian.fit`
             function.
         """
-        self.samples_= np.random.normal(10, 1, 1000)  
 
         self.biased_ = biased_var
         self.fitted_, self.mu_, self.var_ = False, None, None
@@ -63,16 +62,8 @@ class UnivariateGaussian:
         Sets `self.mu_`, `self.var_` attributes according to calculated estimation (where
         estimator is either biased or unbiased). Then sets `self.fitted_` attribute to `True`
         """
-        # # raise NotImplementedError()
-        # if (self.biased_) : 
-        #     self.mu_ = 0 #todo
-        #     self.var_ = 0
-        # else:
-        #     self.mu_ = 0 #todo
-        #     self.var_ = 0
-
-        hist, bin_edges = np.histogram(self.samples_)
-    
+        self.mu_ = np.mean(X)
+        self.var_ = np.var(X)
 
         self.fitted_ = True
         return self
@@ -97,7 +88,9 @@ class UnivariateGaussian:
         """
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `pdf` function")
-        raise NotImplementedError()
+    
+        
+        return (1/(self.var_*(np.sqrt(2*np.pi)))) * np.exp((-((X - self.mu_)**2))/(2* (self.var_**2)))
 
     @staticmethod
     def log_likelihood(mu: float, sigma: float, X: np.ndarray) -> float:
@@ -118,8 +111,22 @@ class UnivariateGaussian:
         log_likelihood: float
             log-likelihood calculated
         """
-        raise NotImplementedError()
+        return np.log( np.exp(-1/(2*(sigma**2)) * np.sum((X-mu)**2)) / (2*np.pi*(sigma**2)))
+    
+    #I added this private method
+    def _plot_graph(self, samples:np.ndarray):
+        x = np.arange(10,1001, 10) 
+        y = list()
 
+        for i in range(10, 1001, 10):
+            y.append(abs(self.fit(samples[0:i]).mu_ - 10))
+
+        plt.title("graph of abs dist between the estimated- and true value of the expectation") 
+        plt.xlabel("sample size") 
+        plt.ylabel("absolute distance between the estimated- and true value of the expectation") 
+        plt.plot(x,y) 
+        plt.show()
+        
 
 class MultivariateGaussian:
     """
@@ -211,3 +218,25 @@ class MultivariateGaussian:
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
         raise NotImplementedError()
+
+
+def main():
+
+    X = np.random.normal(10, 1, 1000)
+    ge = UnivariateGaussian()
+    ge.__init__(False)
+    ge.fit(X)
+
+    print((ge.mu_, ge.var_))
+
+    ge._plot_graph(X)
+
+    plt.scatter(X, ge.pdf(X))
+    plt.title("PDF - GAUSSIAN") 
+    plt.xlabel("sample") 
+    plt.ylabel("pdf") 
+    plt.show()
+    
+    
+if __name__ == "__main__":
+    main()
