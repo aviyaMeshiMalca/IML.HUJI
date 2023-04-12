@@ -4,12 +4,12 @@ from numpy.linalg import inv, det, slogdet
 from numpy import random
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import pandas as pd
-from scipy import stats
+# import seaborn as sns
+# import pandas as pd
+# from scipy import stats
 from scipy.stats import norm
 from scipy.optimize import curve_fit
-from scipy import asarray as ar,exp
+# from scipy import asarray as ar,exp
 import sys
 
 
@@ -173,7 +173,7 @@ class MultivariateGaussian:
         Then sets `self.fitted_` attribute to `True`
         """
         self.mu_ = X.mean(axis=0)
-        self.cov_ = np.cov(X)
+        self.cov_ = (1/(len(X) - 1) )* np.transpose(X - self.mu_) @ (X - self.mu_) 
 
         self.fitted_ = True
         return self
@@ -199,7 +199,7 @@ class MultivariateGaussian:
         if not self.fitted_:
             raise ValueError("Estimator must first be fitted before calling `pdf` function")
         
-        return ((2*np.pi)**(-X.size/2))*(np.det(self.cov_)** (-0.5))\
+        return ((2*np.pi)**(-X.size/2))*(np.linalg.det(self.cov_)** (-0.5))\
             * np.exp((-0.5*(np.matmul(np.matmul(np.transpose(X - self.mu_)), np.linalg.inv(self.cov_))),(self.cov_ - self.mu_)))
         
     @staticmethod
@@ -221,34 +221,6 @@ class MultivariateGaussian:
         log_likelihood: float
             log-likelihood calculated over all input data and under given parameters of Gaussian
         """
-        return (-X.size/2) * (np.log( (2*np.pi)**X.size) + np.log( np.det(cov))) \
+        return (-X.size/2) * (X.size * np.log( (2*np.pi)) + np.log( np.linalg.det(cov))) \
             - 1/2 * np.sum ( (np.matmul(np.matmul(np.transpose(X-mu), np.linalg.inv(cov))) ,(X-mu)) )
         
-def main():
-
-    # X = np.random.normal(10, 1, 1000)
-    # ge = UnivariateGaussian()
-    # ge.__init__(False)
-    # ge.fit(X)
-
-    # print((ge.mu_, ge.var_))
-
-    # ge._plot_graph(X)
-
-    # plt.scatter(X, ge.pdf(X))
-    # plt.title("PDF - GAUSSIAN") 
-    # plt.xlabel("sample") 
-    # plt.ylabel("pdf") 
-    # plt.show()
-
-    X = np.random.multivariate_normal(10,1,1000)
-    ge = MultivariateGaussian()
-    ge.__init__()
-    ge.fit(X)
-
-    print((ge.mu_, ge.cov_))
-
-
-    
-if __name__ == "__main__":
-    main()
