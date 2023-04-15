@@ -2,6 +2,7 @@ from IMLearn.utils import split_train_test
 from IMLearn.learners.regressors import LinearRegression
 
 from typing import NoReturn
+from typing import Optional
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
