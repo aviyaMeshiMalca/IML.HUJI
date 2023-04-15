@@ -27,8 +27,42 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     Post-processed design matrix and response vector (prices) - either as a single
     DataFrame or a Tuple[DataFrame, Series]
     """
-    raise NotImplementedError()
+    #drop irelevant features
+    X.drop(['id','zipcode','lat'],axis=1, inplace=True)
 
+    X = X.apply(pd.to_numeric, errors='coerce')
+    
+    #drop negative prices in y
+    if y is not None:
+        y = pd.to_numeric(y, errors='coerce')
+        positive_indices = y[y >= 0].index
+        y = y[y >= 0]
+        X = X.loc[positive_indices]
+    
+    #check that cols which soppused to have only positive values actually make it
+    pos_val_X_cols = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'waterfront', 'sqft_above',
+                           "sqft_basement", "yr_built", "yr_renovated", "long"]
+    valid_positive_rows = (X[pos_val_X_cols] >= 0).all(axis=1)
+    X = X.loc[valid_positive_rows]
+    if y is not None:
+        y = y[valid_positive_rows]
+
+    #check that rooms size is not too small
+    min_sq_size_of_room = 30
+    room_size_X_cols = ['sqft_living','sqft_lot','sqft_above',
+                        'sqft_basement','sqft_living15','sqft_lot15']
+    valid_room_size_rows = (X[room_size_X_cols] >= min_sq_size_of_room).all(axis=1)
+    X = X.loc[valid_room_size_rows]
+    if y is not None:
+        y = y[valid_room_size_rows]
+
+    #make date numerical notation
+    X['date'] = pd.to_datetime(X['date'])
+
+    if y is None:
+        return X
+    
+    return (X, y)
 
 def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") -> NoReturn:
     """
@@ -55,10 +89,12 @@ if __name__ == '__main__':
     df = pd.read_csv("../datasets/house_prices.csv")
 
     # Question 1 - split data into train and test sets
-    raise NotImplementedError()
+    y = df.iloc[:, 2]
+    X = df.drop(df.columns[2], axis=1)
+    (train_X, train_y, test_X, test_y) = split_train_test(X, y, 0.75)
 
     # Question 2 - Preprocessing of housing prices dataset
-    raise NotImplementedError()
+    proccessed_df = preprocess_data(X, y)
 
     # Question 3 - Feature evaluation with respect to response
     raise NotImplementedError()
