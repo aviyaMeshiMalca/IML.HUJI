@@ -30,7 +30,10 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     DataFrame or a Tuple[DataFrame, Series]
     """
     #drop irelevant features
-    X.drop(['id','zipcode','lat', 'date'],axis=1, inplace=True)
+    X.drop({'id','lat', 'date'},axis=1, inplace=True)
+
+    # make zipcode numerical notation
+    X = pd.concat([X.drop('zipcode', axis=1), pd.get_dummies(X['zipcode'])], axis=1)
 
     X = X.apply(pd.to_numeric, errors='coerce')
     
@@ -40,31 +43,37 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
         positive_indices = y[y >= 0].index
         y = y[y >= 0]
         X = X.loc[positive_indices]
+
+    #check that there are no null
+    # create a boolean mask of null values
+    mask = X.isnull().any(axis=1)
+    X = X.loc[~mask]
+    if y is not None:
+        y = y[~mask]
+
     
     #check that cols which soppused to have only positive values actually make it
     pos_val_X_cols = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'waterfront', 'sqft_above',
-                           "sqft_basement", "yr_built", "yr_renovated", "long"]
+                           "sqft_basement", "yr_built", "yr_renovated"]
     valid_positive_rows = (X[pos_val_X_cols] >= 0).all(axis=1)
+
+    # Select only the valid rows and columns
     X = X.loc[valid_positive_rows]
     if y is not None:
         y = y[valid_positive_rows]
 
     #check that rooms size is not too small
-    min_sq_size_of_room = 30
-    room_size_X_cols = ['sqft_living','sqft_lot','sqft_above',
-                        'sqft_basement','sqft_living15','sqft_lot15']
+    min_sq_size_of_room = 20
+    room_size_X_cols = ['sqft_living','sqft_living15','sqft_lot15']
     valid_room_size_rows = (X[room_size_X_cols] >= min_sq_size_of_room).all(axis=1)
     X = X.loc[valid_room_size_rows]
     if y is not None:
         y = y[valid_room_size_rows]
 
-    #make date numerical notation
-    # X['date'] = pd.to_datetime(X['date'])
-
     if y is None:
         return X
     
-    return X, y
+    return [X, y]
 
 
 def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") -> NoReturn:
@@ -120,6 +129,7 @@ if __name__ == '__main__':
     # Question 1 - split data into train and test sets
     y = df.iloc[:, 2]
     X = df.drop(df.columns[2], axis=1)
+    
     (train_X, train_y, test_X, test_y) = split_train_test(X, y, 0.75)
 
     # Question 2 - Preprocessing of housing prices dataset
