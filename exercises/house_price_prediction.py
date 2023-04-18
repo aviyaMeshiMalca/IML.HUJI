@@ -5,10 +5,12 @@ from typing import NoReturn
 from typing import Optional
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.io as pio
 pio.templates.default = "simple_white"
+import os
 
 
 def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
@@ -28,7 +30,7 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     DataFrame or a Tuple[DataFrame, Series]
     """
     #drop irelevant features
-    X.drop(['id','zipcode','lat'],axis=1, inplace=True)
+    X.drop(['id','zipcode','lat', 'date'],axis=1, inplace=True)
 
     X = X.apply(pd.to_numeric, errors='coerce')
     
@@ -57,12 +59,13 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
         y = y[valid_room_size_rows]
 
     #make date numerical notation
-    X['date'] = pd.to_datetime(X['date'])
+    # X['date'] = pd.to_datetime(X['date'])
 
     if y is None:
         return X
     
-    return (X, y)
+    return X, y
+
 
 def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") -> NoReturn:
     """
@@ -81,7 +84,33 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
     output_path: str (default ".")
         Path to folder in which plots are saved
     """
-    raise NotImplementedError()
+
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
+    #calculate Pearson Correlation
+    for feature_name in X.columns:
+        feature = X[feature_name]
+        # Calculate Pearson correlation between feature and response
+        x_std = np.std(feature)
+        y_std = np.std(y)
+        if (x_std == 0 or y_std == 0):
+            pearson = 0
+        else:
+            pearson = np.cov(feature, y) / (x_std * y_std)
+
+        # Create scatter plot
+        fig, ax = plt.subplots()
+        ax.scatter(feature, y, alpha=0.5)
+        ax.set_xlabel(feature_name)
+        ax.set_ylabel("Response")
+        ax.set_title(f"{feature_name} (Pearson Correlation:{pearson})")
+
+        # Save plot to file
+        filename = f"{feature_name}.png"
+        filepath = os.path.join(output_path, filename)
+        plt.savefig(filepath)
+        plt.close(fig)
 
 
 if __name__ == '__main__':
@@ -97,7 +126,7 @@ if __name__ == '__main__':
     proccessed_df = preprocess_data(X, y)
 
     # Question 3 - Feature evaluation with respect to response
-    raise NotImplementedError()
+    feature_evaluation(proccessed_df, y)
 
     # Question 4 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
