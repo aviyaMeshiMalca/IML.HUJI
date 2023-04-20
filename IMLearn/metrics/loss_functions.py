@@ -17,8 +17,7 @@ def mean_square_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     MSE of given predictions
     """
     if (y_true.__len__() != y_pred.__len__()) : return 0 #todo is this legal?
-
-    return (1/y_true.__len__()) * np.sum((y_true - y_pred)**2) 
+    return np.mean((y_true - y_pred)**2)
 
 
 def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: bool = True) -> float:

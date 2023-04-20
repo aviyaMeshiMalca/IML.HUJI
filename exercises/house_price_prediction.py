@@ -71,8 +71,12 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     if y is not None:
         y = y[valid_room_size_rows]
 
+    X.reset_index(inplace=True, drop=True)
+
     if y is None:
         return X
+    
+    y.reset_index(inplace=True, drop=True)
     
     return [X, y]
 

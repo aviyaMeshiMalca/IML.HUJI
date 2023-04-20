@@ -45,32 +45,50 @@ if __name__ == '__main__':
     #   3) Test fitted model over test set
     #   4) Store average and variance of loss over test set
     # Then plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
-    for p in range(10, 101):
-        avg_loss = 0
-        for i in range(0, 10):
-            (train_X, train_y, test_X, test_y) = split_train_test(X, y, p/100)
-            preprocess_X, preprocess_y  = preprocess_data(train_X, train_y)
-            lr = LinearRegression()
-            lr.__init__()
-            lr.fit(preprocess_X, preprocess_y)
-            avg_loss += lr._loss(test_X, test_y)
-        avg_loss /= 10
 
-    # Create scatter plot
-        fig, ax = plt.subplots()
-        ax.scatter(p, avg_loss, alpha=0.5)
-        ax.set_xlabel("sample percantage")
-        ax.set_ylabel("average loss")
-        ax.set_title(f"average loss as function of sample percantage")
+    # Define percentages to sample from the overall training data
+    percentages = np.arange(0.1, 1.01, 0.01)
 
-        # Save plot to file
-        filename = "average loss as function of sample percantage.png"
-        filepath = os.path.join(output_path, filename)
-        plt.savefig(filepath)
-        plt.close(fig)
+    # Define number of iterations for each percentage
+    num_iter = 10
 
-    
-    # for p in range(10, 100):
-    #     (train_X, train_y, test_X, test_y) = split_train_test(X, y, p)
-    #     linear_regression.fit()
+    # Define arrays to store results
+    avg_loss = np.zeros_like(percentages)
+    std_loss = np.zeros_like(percentages)
+
+    # Define linear regression model
+    model = LinearRegression(include_intercept=True)
+
+    # Loop over each percentage
+    for i, p in enumerate(percentages):
+        # Initialize array to store losses for each iteration
+        losses = np.zeros(num_iter)
+        
+        # Repeat for num_iter times
+        for j in range(num_iter):
+            # Sample p% of the overall training data
+            preprocessed_X, preprocessed_y = preprocess_data(X.copy(), y.copy())
+            (preprocessed_train_X, preprocessed_train_y, preprocessed_test_X, preprocessed_test_y) = split_train_test(preprocess_X, preprocess_y, p)
+            
+            # (train_X, train_y, test_X, test_y) = split_train_test(X, y, p)
+            # preprocessed_train_X, preprocessed_train_y = preprocess_data(train_X, train_y)
+            # preprocessed_test_X, preprocessed_test_y = preprocess_data(test_X, test_y)
+            
+            # Fit linear model over sampled set
+            model.fit(preprocessed_train_X, preprocessed_train_y)
+            
+            # Calculate loss over test set
+            loss = model._loss(preprocessed_test_X, preprocessed_test_y )
+            losses[j] = loss
+        
+        # Store average and variance of loss over test set for current percentage
+        avg_loss[i] = np.mean(losses)
+        std_loss[i] = np.std(losses)
+        
+    # Plot average loss as function of training size with error ribbon of size (mean-2*std, mean+2*std)
+    plt.errorbar(percentages, avg_loss, yerr=2*std_loss, fmt='-o')
+    plt.xlabel('Percentage of overall training data')
+    plt.ylabel('Average square loss over test set')
+    plt.show()
+
 

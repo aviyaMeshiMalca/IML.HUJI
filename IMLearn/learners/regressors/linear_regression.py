@@ -56,8 +56,7 @@ class LinearRegression(BaseEstimator):
 
         if self.include_intercept_ :
              X = np.c_[np.ones(X.shape[0]), X]
-
-        self.coefs_ = np.matmul(np.linalg.pinv(X),y)
+        self.coefs_ = np.matmul(np.linalg.pinv(X), y)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
