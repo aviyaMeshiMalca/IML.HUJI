@@ -39,8 +39,8 @@ def split_train_test(X: pd.DataFrame, y: pd.Series, train_proportion: float = .7
     train_X = X.iloc[train_idx]
     train_y = y.iloc[train_idx]
 
-    test_X = X.drop(train_idx, axis=0)
-    test_y = y.drop(train_idx, axis=0)
+    test_X = X.drop(train_idx, axis=0, inplace=False)
+    test_y = y.drop(train_idx, axis=0, inplace=False)
     
     return (train_X, train_y, test_X, test_y)
 

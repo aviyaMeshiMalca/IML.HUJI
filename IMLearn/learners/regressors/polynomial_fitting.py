@@ -22,6 +22,7 @@ class PolynomialFitting(BaseEstimator):
         super().__init__()
         self._k = k
         self._coefs = None
+        self._lin_model = LinearRegression(include_intercept=False)
 
     def _fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
         """
@@ -35,18 +36,12 @@ class PolynomialFitting(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-        # poly_features = np.ones((X.shape[0], 1))
-        # for i in range(1, self._k+1):
-        #     poly_features = np.concatenate((poly_features, X**i), axis=1) //tpdp delete
+       
         
-        poly_features = np.vander(X, self._k)
+        poly_features = self.__transform(X)
 
-        # calculate least squares solution
-        A = np.dot(poly_features.T, poly_features)
-        b = np.dot(poly_features.T, y)
-        self._coefs = np.linalg.solve(A, b)
-
-        return None
+        self._lin_model._fit(poly_features, y)
+        self._coefs = self._lin_model.coefs_
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -62,7 +57,7 @@ class PolynomialFitting(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        return np.matmul(X, self._coefs)
+        return np.matmul(self.__transform(X), self._coefs)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -96,4 +91,4 @@ class PolynomialFitting(BaseEstimator):
         transformed: ndarray of shape (n_samples, k+1)
             Vandermonde matrix of given samples up to degree k
         """
-        return np.vander(X, self._k)
+        return np.vander(X, self._k+1)
