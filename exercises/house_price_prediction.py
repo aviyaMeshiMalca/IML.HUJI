@@ -57,7 +57,6 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     pos_val_X_cols = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'waterfront', 'sqft_above',
                            "sqft_basement", "yr_built", "yr_renovated"]
     valid_positive_rows = (X[pos_val_X_cols] >= 0).all(axis=1)
-
     # Select only the valid rows and columns
     X = X.loc[valid_positive_rows]
     if y is not None:
@@ -126,10 +125,11 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
         plt.savefig(filepath)
         plt.close(fig)
 
+        return None
 
 if __name__ == '__main__':
     np.random.seed(0)
-    df = pd.read_csv("../datasets/house_prices.csv")
+    df = pd.read_csv("datasets/house_prices.csv")
     
     # Question 1 - split data into train and test sets
     y = df['price']
