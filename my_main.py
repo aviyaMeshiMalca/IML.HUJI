@@ -30,7 +30,7 @@ if __name__ == '__main__':
     # Question 1 - split data into train and test sets
     y = df['price']
     X = df.drop('price', axis=1)
-    (train_X, train_y, test_X, test_y) = split_train_test(X, y, 0.75)
+    (train_X, train_y, test_X, test_y) = split_train_test(X.copy(), y.copy(), 0.75)
 
     # Question 2 - Preprocessing of housing prices dataset
     preprocess_X, preprocess_y = preprocess_data(train_X, train_y)
@@ -56,9 +56,6 @@ if __name__ == '__main__':
     avg_loss = np.zeros_like(percentages)
     std_loss = np.zeros_like(percentages)
 
-    # Define linear regression model
-    model = LinearRegression(include_intercept=True)
-
     # Loop over each percentage
     for i, p in enumerate(percentages):
         # Initialize array to store losses for each iteration
@@ -68,15 +65,12 @@ if __name__ == '__main__':
         for j in range(num_iter):
 
             # Sample p% of the overall training data
-            model.fitted_ = False
             preprocessed_X, preprocessed_y = preprocess_data(X.copy(), y.copy())
-            (preprocessed_train_X, preprocessed_train_y, preprocessed_test_X, preprocessed_test_y) = split_train_test(preprocess_X, preprocess_y, p)
-            
-            # (train_X, train_y, test_X, test_y) = split_train_test(X, y, p)
-            # preprocessed_train_X, preprocessed_train_y = preprocess_data(train_X, train_y)
-            # preprocessed_test_X, preprocessed_test_y = preprocess_data(test_X, test_y)
+            (preprocessed_train_X, preprocessed_train_y, preprocessed_test_X, preprocessed_test_y) \
+                = split_train_test(preprocess_X, preprocess_y, p)
             
             # Fit linear model over sampled set
+            model = LinearRegression(include_intercept=True)
             model.fit(preprocessed_train_X, preprocessed_train_y)
             
             # Calculate loss over test set
