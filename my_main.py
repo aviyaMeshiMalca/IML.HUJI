@@ -66,7 +66,9 @@ if __name__ == '__main__':
         
         # Repeat for num_iter times
         for j in range(num_iter):
+
             # Sample p% of the overall training data
+            model.fitted_ = False
             preprocessed_X, preprocessed_y = preprocess_data(X.copy(), y.copy())
             (preprocessed_train_X, preprocessed_train_y, preprocessed_test_X, preprocessed_test_y) = split_train_test(preprocess_X, preprocess_y, p)
             
