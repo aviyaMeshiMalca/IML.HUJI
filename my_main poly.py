@@ -97,8 +97,26 @@ if __name__ == '__main__':
     plt.title('loss vs Polynomial Degree')
     plt.show()
 
-
-
     # Question 5 - Evaluating fitted model on different countries
-    raise NotImplementedError()
+    other_countries = df[df['Country'] != 'Israel']['Country'].unique()
+    errors = []
+    for country in other_countries:
+        country_df = df[df['Country'] == country]
+        X = country_df['DayOfYear']
+        y = country_df['Temp']
+        X.reset_index(inplace=True, drop=True)
+        y.reset_index(inplace=True, drop=True)
+
+        (train_X, train_y, test_X, test_y) = split_train_test(X.copy(), y.copy(), 0.75)
+        model = PolynomialFitting(5)
+        model._fit(train_X.to_numpy(), train_y.to_numpy())
+        error = model._loss(test_X, test_y)
+        errors.append(round(error, 2))
+
+     # Plot a bar plot of the test errors for each value of k
+    plt.bar(x=other_countries, height=errors)
+    plt.xlabel('Country')
+    plt.ylabel('MSE')
+    plt.title('Model Error on Other Countries than Israel')
+    plt.show()
 
