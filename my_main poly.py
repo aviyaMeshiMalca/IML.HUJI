@@ -9,13 +9,12 @@ from IMLearn.utils import utils as ut
 from IMLearn.learners.regressors import linear_regression
 from utils import *
 from scipy.stats import multivariate_normal as mvn
-# from sklearn.linear_model import LinearRegression
-from IMLearn.learners.regressors.linear_regression import LinearRegression
+from sklearn.linear_model import LinearRegression
+# from IMLearn.learners.regressors.linear_regression import LinearRegression
 from sklearn.metrics import mean_squared_error
 from exercises.house_price_prediction import preprocess_data
 from exercises.house_price_prediction import feature_evaluation
 from IMLearn.utils import split_train_test
-import IMLearn.learners.regressors.linear_regression
 from IMLearn.learners.regressors import PolynomialFitting
 from IMLearn.utils import split_train_test
 
@@ -89,13 +88,13 @@ if __name__ == '__main__':
         loss = model._loss(test_X.copy(), test_y)
         losses.append(round(loss, 2))
         print(f"Degree {k}, loss: {losses[-1]}")
-
     # Plot a bar plot of the test errors for each value of k
     plt.bar(range(1, 11), losses)
     plt.xlabel('Polynomial Degree (k)')
     plt.ylabel('loss')
     plt.title('loss vs Polynomial Degree')
     plt.show()
+
 
     # Question 5 - Evaluating fitted model on different countries
     other_countries = df[df['Country'] != 'Israel']['Country'].unique()
@@ -113,8 +112,7 @@ if __name__ == '__main__':
         error = model._loss(test_X, test_y)
         errors.append(round(error, 2))
 
-     # Plot a bar plot of the test errors for each value of k
-    plt.bar(x=other_countries, height=errors)
+    plt.bar(other_countries, errors)
     plt.xlabel('Country')
     plt.ylabel('MSE')
     plt.title('Model Error on Other Countries than Israel')

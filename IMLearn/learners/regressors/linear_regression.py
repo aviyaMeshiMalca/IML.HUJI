@@ -53,7 +53,6 @@ class LinearRegression(BaseEstimator):
         """
         
         #return (psuado inverse) muly y
-
         if self.include_intercept_ :
              X = np.c_[np.ones(X.shape[0]), X]
         self.coefs_ = np.matmul(np.linalg.pinv(X), y)

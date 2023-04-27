@@ -3,8 +3,7 @@ from typing import NoReturn
 from . import LinearRegression
 from ...base import BaseEstimator
 import numpy as np
-from IMLearn.metrics import loss_functions #todo delete line
-
+from IMLearn.metrics import loss_functions
 
 class PolynomialFitting(BaseEstimator):
     """
@@ -36,8 +35,6 @@ class PolynomialFitting(BaseEstimator):
         y : ndarray of shape (n_samples, )
             Responses of input data to fit to
         """
-       
-        
         poly_features = self.__transform(X)
 
         self._lin_model._fit(poly_features, y)
@@ -91,4 +88,4 @@ class PolynomialFitting(BaseEstimator):
         transformed: ndarray of shape (n_samples, k+1)
             Vandermonde matrix of given samples up to degree k
         """
-        return np.vander(X, self._k+1)
+        return np.vander(X, self._k + 1)
