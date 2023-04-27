@@ -81,7 +81,6 @@ if __name__ == '__main__':
     for k in range(1, 11):
         # Fit a polynomial model of degree k to the training data
         model = PolynomialFitting(k)
-
         model._fit(train_X.to_numpy(), train_y.to_numpy())
     
         # Evaluate the model on the test data

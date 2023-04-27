@@ -30,7 +30,17 @@ def preprocess_data(X: pd.DataFrame, y: Optional[pd.Series] = None):
     DataFrame or a Tuple[DataFrame, Series]
     """
     #drop irelevant features
-    X.drop(['id','lat','date', "zipcode"],axis=1, inplace=True)
+    X.drop(['id','lat', "date", "zipcode"],axis=1, inplace=True)
+
+    # valid_date_rows = (X['date'] != '0')
+    # X = X.loc[valid_date_rows]
+    # if y is not None:
+    #     y = y[valid_date_rows]
+    #     y.reset_index(inplace=True, drop=True)
+
+    # X.reset_index(inplace=True, drop=True)
+
+    # X['date'] = pd.to_datetime(X['date'], format='%Y%m%dT%H%M%S')
 
     # make zipcode numerical notation
     # zipcode_hot_ones = pd.get_dummies(X['zipcode'], prefix='zipcode')
@@ -128,10 +138,14 @@ def feature_evaluation(X: pd.DataFrame, y: pd.Series, output_path: str = ".") ->
         return None
 
 if __name__ == '__main__':
-    np.random.seed(0)
+
+        np.random.seed(0)
     df = pd.read_csv("datasets/house_prices.csv")
-    
+
     # Question 1 - split data into train and test sets
+    df.dropna(inplace=True)
+    df.reset_index(drop=True, inplace=True)
+
     y = df['price']
     X = df.drop('price', axis=1)
     (train_X, train_y, test_X, test_y) = split_train_test(X.copy(), y.copy(), 0.75)
@@ -140,7 +154,7 @@ if __name__ == '__main__':
     preprocess_X, preprocess_y = preprocess_data(train_X, train_y)
 
     # Question 3 - Feature evaluation with respect to response
-    feature_evaluation(preprocess_X, preprocess_y)
+    feature_evaluation(preprocess_X.copy(), preprocess_y.copy())
 
     # Question 4 - Fit model over increasing percentages of the overall training data
     # For every percentage p in 10%, 11%, ..., 100%, repeat the following 10 times:
@@ -159,26 +173,27 @@ if __name__ == '__main__':
     # Define arrays to store results
     avg_loss = np.zeros_like(percentages)
     std_loss = np.zeros_like(percentages)
+    (train_X, train_y, test_X, test_y) = split_train_test(X.copy(), y.copy())
+    
+    preprocessed_train_X, preprocessed_train_y = preprocess_data(train_X.copy(), train_y.copy())
+    preprocessed_test_X, preprocessed_test_y = preprocess_data(test_X.copy(), test_y.copy())
 
     # Loop over each percentage
     for i, p in enumerate(percentages):
         # Initialize array to store losses for each iteration
         losses = np.zeros(num_iter)
-        
         # Repeat for num_iter times
         for j in range(num_iter):
-
             # Sample p% of the overall training data
-            preprocessed_X, preprocessed_y = preprocess_data(X.copy(), y.copy())
-            (preprocessed_train_X, preprocessed_train_y, preprocessed_test_X, preprocessed_test_y) \
-                = split_train_test(preprocess_X, preprocess_y, p)
+            sampled_train_X = preprocessed_train_X.sample(frac=p)
+            sampled_train_y = preprocessed_train_y[sampled_train_X.index]
             
             # Fit linear model over sampled set
             model = LinearRegression(include_intercept=True)
-            model.fit(preprocessed_train_X, preprocessed_train_y)
+            model._fit(sampled_train_X, sampled_train_y)
             
             # Calculate loss over test set
-            loss = model._loss(preprocessed_test_X, preprocessed_test_y )
+            loss = model._loss(preprocessed_test_X, preprocessed_test_y)
             losses[j] = loss
         
         # Store average and variance of loss over test set for current percentage
@@ -191,3 +206,6 @@ if __name__ == '__main__':
     plt.ylabel('Average square loss over test set')
     plt.show()
 
+
+
+   
