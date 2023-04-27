@@ -51,7 +51,7 @@ def load_data(filename: str) -> pd.DataFrame:
 if __name__ == '__main__':
     np.random.seed(0)
 
-    # Question 1 - Load and preprocessing of city temperature dataset
+        # Question 1 - Load and preprocessing of city temperature dataset
     df = load_data("datasets/City_Temperature.csv")
 
     # Question 2 - Exploring data for specific country
@@ -103,7 +103,6 @@ if __name__ == '__main__':
     for k in range(1, 11):
         # Fit a polynomial model of degree k to the training data
         model = PolynomialFitting(k)
-
         model._fit(train_X.to_numpy(), train_y.to_numpy())
     
         # Evaluate the model on the test data
@@ -139,4 +138,6 @@ if __name__ == '__main__':
     plt.ylabel('MSE')
     plt.title('Model Error on Other Countries than Israel')
     plt.show()
+
+
 
