@@ -16,8 +16,14 @@ def mean_square_error(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     MSE of given predictions
     """
-    if (y_true.__len__() != y_pred.__len__()) : return 0 #todo is this legal?
-    return np.mean((y_true - y_pred)**2)
+    if y_true.shape != y_pred.shape:
+        raise ValueError('Shapes of y_pred and y_true are different')
+
+    if y_true.size == 0:
+        return 0
+
+    arr = np.square(y_true - y_pred)
+    return np.mean(arr)
 
 
 def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: bool = True) -> float:
@@ -37,7 +43,24 @@ def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: b
     -------
     Misclassification of given predictions
     """
-    raise NotImplementedError()
+    if y_true.shape != y_pred.shape:
+        raise ValueError('Shapes of y_pred and y_true are different')
+
+    if y_true.size == 0:
+        return 0
+
+    y_true = y_true.reshape(-1, 1)
+    y_pred = y_pred.reshape(-1, 1)
+
+    num_of_miss_class = 0.0
+    for i in range(y_true.size):
+        if y_true[i] != y_pred[i]:
+            num_of_miss_class += 1
+
+    if normalize:
+        return num_of_miss_class / y_true.size
+
+    return num_of_miss_class
 
 
 def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -55,7 +78,13 @@ def accuracy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     -------
     Accuracy of given predictions
     """
-    raise NotImplementedError()
+    if y_true.shape != y_pred.shape:
+        raise ValueError('Shapes of y_pred and y_true are different')
+
+    if y_true.size == 0:
+        return 0
+
+    return np.sum(y_true == y_pred) / len(y_true)
 
 
 def cross_entropy(y_true: np.ndarray, y_pred: np.ndarray) -> float:
