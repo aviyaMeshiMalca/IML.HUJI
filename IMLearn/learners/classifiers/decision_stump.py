@@ -43,13 +43,15 @@ class DecisionStump(BaseEstimator):
         min_error = np.inf  # infinity
 
         for j in range(n_features):
-            for sign in range(-1, 2, 2):  # sign will be assigned to -1, 1
+            for sign in (-1, 1):
                 [threshold, threshold_err] = self._find_threshold(X[:, j], y, sign)
                 if threshold_err < min_error:
                     min_error = threshold_err
                     self.j_ = j
                     self.threshold_ = threshold
                     self.sign_ = sign
+
+        # print("j :", self.j_, "threshold :", self.threshold_, "sign: ", self.sign_)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -73,15 +75,8 @@ class DecisionStump(BaseEstimator):
         Feature values strictly below threshold are predicted as `-sign` whereas values which equal
         to or above the threshold are predicted as `sign`
         """
-        n_samples = X.shape[0]
-        y = np.zeros(n_samples)
-        for i in range(n_samples):
-            if X[i][self.j_] > self.threshold_:
-                y[i] = self.sign_
-            else:
-                y[i] = - self.sign_
-
-        return y
+        y_pred = np.where(X[:, self.j_] < self.threshold_, -self.sign_, self.sign_)
+        return y_pred
 
     def _find_threshold(self, values: np.ndarray, labels: np.ndarray, sign: int) -> Tuple[float, float]:
         """
@@ -113,23 +108,19 @@ class DecisionStump(BaseEstimator):
         For every tested threshold, values strictly below threshold are predicted as `-sign` whereas values
         which equal to or above the threshold are predicted as `sign`
         """
-        n_samples = values.shape[0]
         thresholds = np.unique(values)
         best_error = np.inf
-        best_threshold = values[0]
+        best_threshold = np.inf
 
         for threshold in thresholds:
-            pred = np.ones(n_samples)
-            for i in range(n_samples):
-                if values[i] < threshold:
-                    pred[i] = -sign
+            y_pred = np.where(values < threshold, -sign, sign)
+            error = np.sum(np.abs(y_pred - labels))
 
-            error = np.sum(labels != pred) / n_samples
             if error < best_error:
                 best_error = error
                 best_threshold = threshold
 
-        return best_threshold, best_error
+        return best_threshold, (best_error / len(values))
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
