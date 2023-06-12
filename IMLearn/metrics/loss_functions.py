@@ -52,10 +52,7 @@ def misclassification_error(y_true: np.ndarray, y_pred: np.ndarray, normalize: b
     y_true = y_true.reshape(-1, 1)
     y_pred = y_pred.reshape(-1, 1)
 
-    num_of_miss_class = 0.0
-    for i in range(y_true.size):
-        if y_true[i] != y_pred[i]:
-            num_of_miss_class += 1
+    num_of_miss_class = np.sum(y_true != y_pred)
 
     if normalize:
         return num_of_miss_class / y_true.size
