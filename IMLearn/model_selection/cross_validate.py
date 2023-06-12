@@ -39,16 +39,15 @@ def cross_validate(estimator: BaseEstimator, X: np.ndarray, y: np.ndarray,
     """
     train_scores = []
     validation_scores = []
-    indices = np.arange(len(X))
-
+    indexes = np.arange(len(X))
     fold_size = int(cv / len(X))
-
     for t in range(cv):
-        validation_indices = indices[t * fold_size: (t + 1) * fold_size]
-        train_indices = np.concatenate((indices[:t * fold_size], indices[(t + 1) * fold_size:]))
-
-        train_X, train_y = X[train_indices], y[train_indices]
-        val_X, val_y = X[validation_indices], y[validation_indices]
+        train_indexes = np.concatenate((indexes[:t * fold_size], indexes[(t + 1) * fold_size:]))
+        train_X = X[train_indexes]
+        train_y = y[train_indexes]
+        validation_indexes = indexes[t * fold_size: (t + 1) * fold_size]
+        val_X = X[validation_indexes]
+        val_y = y[validation_indexes]
 
         model = deepcopy(estimator)
         model.fit(train_X, train_y)

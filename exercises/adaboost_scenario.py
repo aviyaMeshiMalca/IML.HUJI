@@ -58,16 +58,11 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     fig = go.Figure()
     training_errors = go.Scatter(x=list(range(0, len(train_losses))), y=train_losses, name='training errors')
     test_errors = go.Scatter(x=list(range(0, len(test_losses))), y=test_losses, name='test errors')
+    fig.update_layout(title='Training and Test Errors as a function of the number of fitted learners',
+                      xaxis_title='Number of fitted learners', yaxis_title='Error')
     fig.add_trace(training_errors)
     fig.add_trace(test_errors)
     fig.show()
-    # fig.write_image("qu1.png")
-
-    # plt.plot(x = list(range(1, n_learners+1)), y = train_losses, label='training errors')
-    # plt.plot(list(range(1, n_learners+1)), test_losses, label='test errors as a function of the number of fitted learners')
-    # plt.title("training- and test errors as a function of the number of fitted learners")
-    # plt.xlabel("number of fitted learners")
-    # plt.ylabel("error")
 
     print("finish qu1")
 
@@ -75,7 +70,8 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     T = [5, 50, 100, 250]
     lims = np.array([np.r_[train_X, test_X].min(axis=0), np.r_[train_X, test_X].max(axis=0)]).T + np.array([-.1, .1])
 
-    fig = go.Figure()
+    fig = make_subplots(rows=2, cols=2, subplot_titles=[f'T = {t}' for t in T])
+
     for t in T:
         predict_func = lambda X: adaboost.partial_predict(X, t)
         decision_boundary = decision_surface(predict_func, xrange=lims[0], yrange=lims[1], density=120, dotted=False)
@@ -107,7 +103,8 @@ def fit_and_evaluate_adaboost(noise, n_learners=250, train_size=5000, test_size=
     fig.add_trace(decision_boundary)
     fig.add_trace(train_data)
 
-    fig.update_layout(title='Decision Boundaries', xaxis_title='First feature ', yaxis_title='Second Feature')
+    fig.update_layout(title='Decision Surface with Weighted Samples', xaxis_title='First Feature',
+                      yaxis_title='Second Feature')
     fig.show()
 
 
