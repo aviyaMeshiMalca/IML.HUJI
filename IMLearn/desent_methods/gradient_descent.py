@@ -39,6 +39,7 @@ class GradientDescent:
         Callable function receives as input any argument relevant for the current GD iteration. Arguments
         are specified in the `GradientDescent.fit` function
     """
+
     def __init__(self,
                  learning_rate: BaseLR = FixedLR(1e-3),
                  tol: float = 1e-5,
@@ -119,4 +120,26 @@ class GradientDescent:
                 Euclidean norm of w^(t)-w^(t-1)
 
         """
-        raise NotImplementedError()
+        # - Optimization is performed as long as self.max_iter_ has not been reached and that the
+        # Euclidean norm of w^(t)-w^(t-1) is more than the specified self.tol_"
+        w_t = f.weights_
+        delta = np.inf
+
+        for t in range(self.max_iter_):
+            if delta <= self.tol_:
+                break
+
+            gradient = f.compute_jacobian()
+
+            # At each iteration the learning rate is specified according to self.learning_rate_.lr_step
+            eta = self.learning_rate_.lr_step
+
+            w_t_minus_1 = w_t.copy()
+            w_t -= self.learning_rate_ * gradient
+
+            # Euclidean norm of w^(t)-w^(t-1)
+            delta = (np.linalg.norm(w_t - w_t_minus_1))
+
+            if self.callback_ is not None:
+                self.callback_(self, w_t, f.compute_output(), gradient, t, eta, delta)
+
