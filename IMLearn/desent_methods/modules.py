@@ -50,7 +50,7 @@ class L2(BaseModule):
         output: ndarray of shape (n_in,)
             L2 derivative with respect to self.weights at point self.weights
         """
-        return self.weights_*2 #todo check!
+        return self.weights_ * 2  # todo check!
 
 
 class L1(BaseModule):
@@ -95,7 +95,7 @@ class L1(BaseModule):
         output: ndarray of shape (n_in,)
             L1 derivative with respect to self.weights at point self.weights
         """
-        return np.gradient(self.weights_)#todo check!
+        return np.gradient(self.weights_)  # todo check!
 
 
 class LogisticModule(BaseModule):
@@ -133,7 +133,14 @@ class LogisticModule(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        raise NotImplementedError()
+        m = X.shape[0]
+
+        def sigmoid(a):
+            return (np.e ** a) / (1 + (np.e ** a))
+
+        sigmoid = sigmoid(np.dot(X, self.weights))
+
+        return -(1 / m) * np.sum(np.log(sigmoid[y == 1]))  # log of multiply is sum of log
 
     def compute_jacobian(self, X: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
         """
@@ -152,7 +159,15 @@ class LogisticModule(BaseModule):
         output: ndarray of shape (n_features,)
             Derivative of function with respect to self.weights at point self.weights
         """
-        raise NotImplementedError()
+        def sigmoid(a):
+            return (np.e ** a) / (1 + (np.e ** a))
+
+        sigmoid = sigmoid(np.dot(X, self.weights))
+
+        sum1 = np.log(sigmoid()[y == 1])
+        sum2 = np.log(1 - sigmoid()[y == 0])
+
+        return np.sum(sum1 + sum2)
 
 
 class RegularizedModule(BaseModule):
@@ -210,7 +225,7 @@ class RegularizedModule(BaseModule):
         output: ndarray of shape (1,)
             Value of function at point self.weights
         """
-        raise NotImplementedError()
+        return self.regularization_module_.compute_output()
 
     def compute_jacobian(self, **kwargs) -> np.ndarray:
         """

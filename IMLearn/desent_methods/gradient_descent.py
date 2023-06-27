@@ -132,10 +132,10 @@ class GradientDescent:
             gradient = f.compute_jacobian()
 
             # At each iteration the learning rate is specified according to self.learning_rate_.lr_step
-            eta = self.learning_rate_.lr_step
+            eta = self.learning_rate_.lr_step()
 
             w_t_minus_1 = w_t.copy()
-            w_t -= self.learning_rate_ * gradient
+            w_t -= (eta * gradient)
 
             # Euclidean norm of w^(t)-w^(t-1)
             delta = (np.linalg.norm(w_t - w_t_minus_1))

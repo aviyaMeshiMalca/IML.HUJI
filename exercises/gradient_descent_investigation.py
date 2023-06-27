@@ -9,6 +9,7 @@ from IMLearn.learners.classifiers.logistic_regression import LogisticRegression
 from IMLearn.utils import split_train_test
 
 import plotly.graph_objects as go
+import plotly.io as pio
 
 
 def plot_descent_path(module: Type[BaseModule],
@@ -75,8 +76,8 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     weights: List[np.ndarray]
         Recorded parameters
     """
-    values_list = list(np.ndarray)
-    weights_list = list(np.ndarray)
+    values_list = list()
+    weights_list = list()
 
     def callback(solver: GradientDescent, weights: np.ndarray, val: np.ndarray,
                  grad: np.ndarray, t: int, eta: float, delta: float):
@@ -88,17 +89,26 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
+    L1_module = L1
+    L2_module = L2
 
-    callback, values_list, weights_list = get_gd_state_recorder_callback()
-    L1_module = L1(init)
-    L2_module = L2(init)
     for eta in etas:
+        callback, values_list, weights_list = get_gd_state_recorder_callback()
         lr = FixedLR(eta)
-        GD_L1 = GradientDescent(learning_rate=lr, callback=callback).fit(f=L1_module)
-        GD_L2 = GradientDescent(callback=callback, learning_rate=lr).fit(f=L2_module)
+        GD_L1 = GradientDescent(learning_rate=lr, callback=callback).fit(f=L1_module(init), X=None, y=None)
+        GD_L2 = GradientDescent(callback=callback, learning_rate=lr).fit(f=L2_module(init), X=None, y=None)
+
+        fig1 = plot_descent_path(L1_module, np.column_stack((values_list, weights_list)))
+        fig1.show(renderer='browser')
+        pio.write_image(fig1, f'fig1_plot_eta_{eta}.png')
+
+        fig2 = plot_descent_path(L2_module, np.column_stack((values_list, weights_list)))
+        fig2.show(renderer='browser')
+        pio.write_image(fig2, f'fig2_plot_eta_{eta}.png')
 
     #todo what i do with X y?
 
+#not neccesary to submit!!
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                     eta: float = .1,
                                     gammas: Tuple[float] = (.9, .95, .99, 1)):
@@ -145,7 +155,7 @@ def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8)
 
 
 def fit_logistic_regression():
-    # Load and split SA Heard Disease dataset
+    # Load and split SA Heart Disease dataset
     X_train, y_train, X_test, y_test = load_data()
 
     # Plotting convergence rate of logistic regression over SA heart disease data
@@ -159,5 +169,5 @@ def fit_logistic_regression():
 if __name__ == '__main__':
     np.random.seed(0)
     compare_fixed_learning_rates()
-    compare_exponential_decay_rates()
+    # compare_exponential_decay_rates()
     fit_logistic_regression()
