@@ -46,12 +46,14 @@ def plot_descent_path(module: Type[BaseModule],
     fig = plot_descent_path(IMLearn.desent_methods.modules.L1, np.ndarray([[1,1],[0,0]]))
     fig.show()
     """
+
     def predict_(w):
         return np.array([module(weights=wi).compute_output() for wi in w])
 
     from utils import decision_surface
     return go.Figure([decision_surface(predict_, xrange=xrange, yrange=yrange, density=70, showscale=False),
-                      go.Scatter(x=descent_path[:, 0], y=descent_path[:, 1], mode="markers+lines", marker_color="black")],
+                      go.Scatter(x=descent_path[:, 0], y=descent_path[:, 1], mode="markers+lines",
+                                 marker_color="black")],
                      layout=go.Layout(xaxis=dict(range=xrange),
                                       yaxis=dict(range=yrange),
                                       title=f"GD Descent Path {title}"))
@@ -73,13 +75,29 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     weights: List[np.ndarray]
         Recorded parameters
     """
-    raise NotImplementedError()
+    values_list = list(np.ndarray)
+    weights_list = list(np.ndarray)
+
+    def callback(solver: GradientDescent, weights: np.ndarray, val: np.ndarray,
+                 grad: np.ndarray, t: int, eta: float, delta: float):
+        values_list.append(val)
+        weights_list.append(weights)
+
+    return callback, values_list, weights_list
 
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
-    raise NotImplementedError()
 
+    callback, values_list, weights_list = get_gd_state_recorder_callback()
+    L1_module = L1(init)
+    L2_module = L2(init)
+    for eta in etas:
+        lr = FixedLR(eta)
+        GD_L1 = GradientDescent(learning_rate=lr, callback=callback).fit(f=L1_module)
+        GD_L2 = GradientDescent(callback=callback, learning_rate=lr).fit(f=L2_module)
+
+    #todo what i do with X y?
 
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                     eta: float = .1,
