@@ -125,14 +125,17 @@ class GradientDescent:
         w_t = f.weights_
         delta = np.inf
 
+        weights_to_return = np.ndarray(X.shape[1])  # len of n_features
+        best = np.inf
+
         for t in range(self.max_iter_):
             if delta <= self.tol_:
                 break
 
-            gradient = f.compute_jacobian()
+            gradient = f.compute_jacobian(X=X, y=y)
 
             # At each iteration the learning rate is specified according to self.learning_rate_.lr_step
-            eta = self.learning_rate_.lr_step()
+            eta = self.learning_rate_.lr_step(t=t + 1)
 
             w_t_minus_1 = w_t.copy()
             w_t -= (eta * gradient)
@@ -140,6 +143,22 @@ class GradientDescent:
             # Euclidean norm of w^(t)-w^(t-1)
             delta = (np.linalg.norm(w_t - w_t_minus_1))
 
+            val = f.compute_output(X=X, y=y)
+
+            if self.out_type_ == "last":
+                weights_to_return = w_t
+
+            if self.out_type_ == "best":
+                if val > best:
+                    best = val
+                    weights_to_return = w_t
+
+            if self.out_type_ == "average":
+                weights_to_return += (w_t / self.max_iter_)
+
             if self.callback_ is not None:
-                self.callback_(self, w_t, f.compute_output(), gradient, t, eta, delta)
+                self.callback_(solver=self, weights=w_t, val=val, grad=gradient, t=t + 1,
+                               eta=eta, delta=delta)
+
+        return weights_to_return
 
