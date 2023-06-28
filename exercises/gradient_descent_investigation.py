@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, List, Callable, Type
 
+from matplotlib import pyplot as plt
+
 from IMLearn import BaseModule
 from IMLearn.desent_methods import GradientDescent, FixedLR, ExponentialLR
 from IMLearn.desent_methods.modules import L1, L2
@@ -88,28 +90,39 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                  etas: Tuple[float] = (1, .1, .01, .001)):
-
-    # Load and split SA Heart Disease dataset
+    # 1 Load and split SA Heart Disease dataset
     X_train, y_train, X_test, y_test = load_data()
 
-    L1_module = L1
-    L2_module = L2
+    modules = [L1, L2]
 
     for eta in etas:
-        callback, values_list, weights_list = get_gd_state_recorder_callback()
-        lr = FixedLR(eta)
-        GD_L1 = GradientDescent(learning_rate=lr, callback=callback).fit(f=L1_module(init), X=X_train, y=y_train)
-        GD_L2 = GradientDescent(callback=callback, learning_rate=lr).fit(f=L2_module(init), X=X_train, y=y_train)
 
-        fig1 = plot_descent_path(L1_module, np.column_stack((values_list, weights_list)))
-        fig1.update_layout(title_text="Descent Path of L1, eta : {}".format(eta))
-        fig1.show(renderer='browser')
+        for module in modules:
+            callback, values_list, weights_list = get_gd_state_recorder_callback()
+            lr = FixedLR(eta)
+            GD = GradientDescent(learning_rate=lr, callback=callback).fit(f=module(init), X=X_train, y=y_train)
 
-        fig2 = plot_descent_path(L2_module, np.column_stack((values_list, weights_list)))
-        fig1.update_layout(title_text="Descent Path of L2, eta : {}".format(eta))
-        fig2.show(renderer='browser')
+            # fig = plot_descent_path(module=module, descent_path=np.column_stack((values_list, weights_list)),
+            #                          title="of Module :{}, eta : {}".format(module.__name__, eta))
+            # fig.show(renderer='browser')
 
-#not neccesary to submit!!
+            # 2 Describe two phenomena that can be seen in the descent path of the ℓ1 objective when using
+            # GD and a fixed learning rate.
+
+            # 3 For each of the modules, plot the convergence rate (i.e. the norm as a function of the GD
+            # iteration) for all specified learning rates. Explain your results
+            # module_convergence_norm = [np.linalg.norm(weights) for weights in weights_list]
+            plt.plot(values_list, label="L1")
+            plt.xlabel("GD Iteration")
+            plt.ylabel("Norm of Weights")
+            plt.title("Convergence Rate for Module : {}, with Learning Rate = {}".format(module.__name__, eta))
+            plt.legend()
+            plt.show()
+
+
+
+
+# not neccesary to submit!!
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                     eta: float = .1,
                                     gammas: Tuple[float] = (.9, .95, .99, 1)):
