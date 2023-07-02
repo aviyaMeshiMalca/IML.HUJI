@@ -137,7 +137,7 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
                 raise ValueError("unknown module")
 
             figure.add_trace(go.Scatter(x=list(range(len(curr_callback.values_list))),
-                                        y=curr_callback.values_list))
+                                        y=curr_callback.values_list, name=str(eta)))
 
     figL1.update_layout(title="Convergence Rate for Module L1 with Different Learning Rates",
                         xaxis_title="GD Iteration",
