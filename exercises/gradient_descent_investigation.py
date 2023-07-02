@@ -13,6 +13,19 @@ from IMLearn.utils import split_train_test
 import plotly.graph_objects as go
 
 
+class Callback:
+    def __init__(self):
+        self.values_list = list()
+        self.weights_list = list()
+
+    def callback_function(self, solver: GradientDescent, weights: np.ndarray, val: np.ndarray,
+                          grad: np.ndarray, t: int, eta: float, delta: float):
+        self.values_list.append(float(val))
+        self.weights_list.append(weights)
+        # print("callback append w_t to list", weights)
+        # print("callback append val to list", val)
+
+
 def plot_descent_path(module: Type[BaseModule],
                       descent_path: np.ndarray,
                       title: str = "",
@@ -53,6 +66,9 @@ def plot_descent_path(module: Type[BaseModule],
         return np.array([module(weights=wi).compute_output() for wi in w])
 
     from utils import decision_surface
+
+    print( "shape: ", descent_path.shape)
+
     return go.Figure([decision_surface(predict_, xrange=xrange, yrange=yrange, density=70, showscale=False),
                       go.Scatter(x=descent_path[:, 0], y=descent_path[:, 1], mode="markers+lines",
                                  marker_color="black")],
@@ -77,15 +93,12 @@ def get_gd_state_recorder_callback() -> Tuple[Callable[[], None], List[np.ndarra
     weights: List[np.ndarray]
         Recorded parameters
     """
-    values_list = list()
-    weights_list = list()
+    callback = Callback()
+    return callback.callback_function, callback.values_list, callback.weights_list
 
-    def callback(solver: GradientDescent, weights: np.ndarray, val: np.ndarray,
-                 grad: np.ndarray, t: int, eta: float, delta: float):
-        values_list.append(val)
-        weights_list.append(weights)
 
-    return callback, values_list, weights_list
+def my_get_gd_state_recorder_callback() -> Callback:
+    return Callback()
 
 
 def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
@@ -96,15 +109,22 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
     modules = [L1, L2]
 
     for eta in etas:
-
         for module in modules:
-            callback, values_list, weights_list = get_gd_state_recorder_callback()
+            curr_callback = my_get_gd_state_recorder_callback()
             lr = FixedLR(eta)
-            GD = GradientDescent(learning_rate=lr, callback=callback).fit(f=module(init), X=X_train, y=y_train)
+            GD = GradientDescent(learning_rate=lr, callback=curr_callback.callback_function).fit(f=module(init),
+                                                                                                 X=X_train.copy(),
+                                                                                                 y=y_train.copy())
 
-            # fig = plot_descent_path(module=module, descent_path=np.column_stack((values_list, weights_list)),
-            #                          title="of Module :{}, eta : {}".format(module.__name__, eta))
-            # fig.show(renderer='browser')
+            if len(curr_callback.weights_list) != len(curr_callback.values_list):
+                raise ValueError("len(curr_callback.weights_list) != len(curr_callback.values_list)")
+
+            descent_path = np.array(curr_callback.weights_list)
+            print("before pass descent_path :shape: ", descent_path.shape)
+
+            fig = plot_descent_path(module=module, descent_path=descent_path,
+                                     title="of Module :{}, eta : {}".format(module.__name__, eta))
+            fig.show(renderer='browser')
 
             # 2 Describe two phenomena that can be seen in the descent path of the ℓ1 objective when using
             # GD and a fixed learning rate.
@@ -112,7 +132,7 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
             # 3 For each of the modules, plot the convergence rate (i.e. the norm as a function of the GD
             # iteration) for all specified learning rates. Explain your results
             # module_convergence_norm = [np.linalg.norm(weights) for weights in weights_list]
-            plt.plot(values_list, label="L1")
+            plt.plot(curr_callback.values_list, label="L1")
             plt.xlabel("GD Iteration")
             plt.ylabel("Norm of Weights")
             plt.title("Convergence Rate for Module : {}, with Learning Rate = {}".format(module.__name__, eta))
@@ -184,4 +204,4 @@ if __name__ == '__main__':
     np.random.seed(0)
     compare_fixed_learning_rates()
     # compare_exponential_decay_rates()
-    fit_logistic_regression()
+    # fit_logistic_regression()

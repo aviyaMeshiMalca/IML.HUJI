@@ -122,43 +122,59 @@ class GradientDescent:
         """
         # - Optimization is performed as long as self.max_iter_ has not been reached and that the
         # Euclidean norm of w^(t)-w^(t-1) is more than the specified self.tol_"
-        w_t = f.weights_
+        w_t = f.weights_.copy()
+        w_t_minus_1 = f.weights_.copy()
         delta = np.inf
 
-        weights_to_return = np.ndarray(X.shape[1])  # len of n_features
-        best = np.inf
+        weights_to_return = np.zeros(X.shape[1])  # len of n_features
+        if self.out_type_ == "best":
+            best = np.inf
 
-        for t in range(self.max_iter_):
-            if delta <= self.tol_:
+        n_iter = np.inf
+
+        for t in range(1, self.max_iter_+1):
+            if delta < self.tol_:
+                n_iter = t
                 break
 
             gradient = f.compute_jacobian(X=X, y=y)
 
             # At each iteration the learning rate is specified according to self.learning_rate_.lr_step
-            eta = self.learning_rate_.lr_step(t=t + 1)
+            eta = self.learning_rate_.lr_step(t=t)
 
-            w_t_minus_1 = w_t.copy()
-            w_t -= (eta * gradient)
+            w_t_minus_1 = w_t.copy()#old
+            w_t -= (eta * gradient)#new
 
             # Euclidean norm of w^(t)-w^(t-1)
             delta = (np.linalg.norm(w_t - w_t_minus_1))
 
             val = f.compute_output(X=X, y=y)
 
-            if self.out_type_ == "last":
-                weights_to_return = w_t
-
-            if self.out_type_ == "best":
-                if val > best:
-                    best = val
-                    weights_to_return = w_t
-
-            if self.out_type_ == "average":
-                weights_to_return += (w_t / self.max_iter_)
+            if self.callback_ is None:
+                print("self.callback_ is None")
 
             if self.callback_ is not None:
-                self.callback_(solver=self, weights=w_t, val=val, grad=gradient, t=t + 1,
+                # print("GD append w_t to list", w_t)
+                # print("GD append val to list", val)
+                self.callback_(solver=self, weights=w_t_minus_1.copy(), val=val.copy(), grad=gradient, t=t,
                                eta=eta, delta=delta)
 
-        return weights_to_return
+            if self.out_type_ == "last":
+                weights_to_return = w_t_minus_1
 
+            if self.out_type_ == "best":
+                if val < best:
+                    best = val
+                    weights_to_return = w_t_minus_1
+
+            if self.out_type_ == "average":
+                weights_to_return += w_t_minus_1
+
+            f.weights_ = w_t.copy()  # new
+
+        if self.out_type_ == "average":
+            if n_iter == 0:
+                raise ValueError("there was no iteration in GD fit")
+            weights_to_return /= (min(n_iter, self.max_iter_-1))
+
+        return weights_to_return
