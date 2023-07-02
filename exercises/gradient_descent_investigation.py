@@ -206,13 +206,13 @@ def fit_logistic_regression():
     # Load and split SA Heart Disease dataset
     X_train, y_train, X_test, y_test = load_data()
 
-    from sklearn.linear_model import LogisticRegression
+    from IMLearn.learners.classifiers import LogisticRegression
 
-    logistic_regression = LogisticRegression()
+    logistic_regression = LogisticRegression(solver=GradientDescent(max_iter=2000))
     logistic_regression.fit(X_train, y_train)
 
     # 8. Fit logistic regression model and plot ROC curve
-    y_pred_prob = logistic_regression.predict_proba(X_test)[:, 1]
+    y_pred_prob = logistic_regression.predict_proba(X_test)
     fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
     roc_auc = auc(fpr, tpr)
 
