@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, List, Callable, Type
 
+from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix
+
 from IMLearn import BaseModule
 from IMLearn.desent_methods import GradientDescent, FixedLR, ExponentialLR
 from IMLearn.desent_methods.modules import L1, L2
@@ -9,6 +11,8 @@ from IMLearn.learners.classifiers.logistic_regression import LogisticRegression
 from IMLearn.utils import split_train_test
 
 import plotly.graph_objects as go
+
+from utils import custom
 
 
 class Callback:
@@ -63,7 +67,7 @@ def plot_descent_path(module: Type[BaseModule],
 
     from utils import decision_surface
 
-    print("shape: ", descent_path.shape)
+    # print("shape: ", descent_path.shape)
 
     return go.Figure([decision_surface(predict_, xrange=xrange, yrange=yrange, density=70, showscale=False),
                       go.Scatter(x=descent_path[:, 0], y=descent_path[:, 1], mode="markers+lines",
@@ -119,11 +123,11 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
             if len(curr_callback.weights_list) != len(curr_callback.values_list):
                 raise ValueError("len(curr_callback.weights_list) != len(curr_callback.values_list)")
 
-            # descent_path = np.array(curr_callback.weights_list)
+            descent_path = np.array(curr_callback.weights_list)
 
-            # fig = plot_descent_path(module=module, descent_path=descent_path,
-            #                          title="of Module :{}, eta : {}".format(module.__name__, eta))
-            # fig.show(renderer='browser')
+            fig = plot_descent_path(module=module, descent_path=descent_path,
+                                     title="of Module :{}, eta : {}".format(module.__name__, eta))
+            fig.show(renderer='browser')
 
             # 3 For each of the modules, plot the convergence rate (i.e. the norm as a function of the GD
             # iteration) for all specified learning rates. Explain your results
@@ -198,19 +202,34 @@ def load_data(path: str = "../datasets/SAheart.data", train_portion: float = .8)
 
 
 def fit_logistic_regression():
+
     # Load and split SA Heart Disease dataset
     X_train, y_train, X_test, y_test = load_data()
 
-    # Plotting convergence rate of logistic regression over SA heart disease data
-    raise NotImplementedError()
+    from sklearn.linear_model import LogisticRegression
 
-    # Fitting l1- and l2-regularized logistic regression models, using cross-validation to specify values
-    # of regularization parameter
-    raise NotImplementedError()
+    logistic_regression = LogisticRegression()
+    logistic_regression.fit(X_train, y_train)
+
+    # 8. Fit logistic regression model and plot ROC curve
+    y_pred_prob = logistic_regression.predict_proba(X_test)[:, 1]
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_prob)
+    roc_auc = auc(fpr, tpr)
+
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=fpr, y=tpr, mode='lines', name='ROC curve (area = {:.2f})'.format(roc_auc)))
+    fig.add_trace(go.Scatter(x=[0, 1], y=[0, 1], mode='lines', name='Random', line=dict(dash='dash')))
+    fig.update_layout(
+        xaxis=dict(title='False Positive Rate'),
+        yaxis=dict(title='True Positive Rate'),
+        title='Receiver Operating Characteristic',
+        showlegend=True
+    )
+    fig.show(renderer='browser')
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-    compare_fixed_learning_rates()
+    # compare_fixed_learning_rates()
     # compare_exponential_decay_rates()
-    # fit_logistic_regression()
+    fit_logistic_regression()
