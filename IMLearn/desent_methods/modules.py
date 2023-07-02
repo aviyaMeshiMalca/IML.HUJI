@@ -159,16 +159,15 @@ class LogisticModule(BaseModule):
         output: ndarray of shape (n_features,)
             Derivative of function with respect to self.weights at point self.weights
         """
-        def sigmoid(a):
-            return (np.e ** a) / (1 + (np.e ** a))
+        n_samples = X.shape[0]
 
-        sigmoid = sigmoid(np.dot(X, self.weights))
+        def compute_logistic(X: np.ndarray, coefs: np.ndarray) -> np.ndarray:
+            linear_scores = np.dot(X, coefs)
+            return 1 / (1 + np.exp(-linear_scores))
 
-        sum1 = np.log(sigmoid()[y == 1])
-        sum2 = np.log(1 - sigmoid()[y == 0])
+        probabilities = compute_logistic(X, self.weights_)
 
-        return np.sum(sum1 + sum2)
-
+        return np.dot(X.T, probabilities - y)/ n_samples
 
 class RegularizedModule(BaseModule):
     """

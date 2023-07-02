@@ -92,21 +92,22 @@ class LogisticRegression(BaseEstimator):
             X = np.c_[np.ones(X.shape[0]), X]
 
         n_features = X.shape[1]
-        weights = np.random.normal(0, 1, n_features) * (1/ np.sqrt(n_features))
+        weights = np.random.normal(0, 1, n_features) * (1 / np.sqrt(n_features))
 
         if self.penalty_ == "l1":
-            reg_module = RegularizedModule(fidelity_module=LogisticModule(),
-                                           regularization_module=L1(), lam=self.lam_,
-                                           include_intercept=self.include_intercept_, weights=weights)
+            regularization_module = RegularizedModule(fidelity_module=LogisticModule(weights=weights),
+                                                      regularization_module=L1(weights=weights), lam=self.lam_,
+                                                      include_intercept=self.include_intercept_, weights=weights)
         elif self.penalty_ == "l2":
-            reg_module = RegularizedModule(fidelity_module=LogisticModule(), regularization_module=L2(), lam=self.lam_,
-                                           include_intercept=self.include_intercept_, weights=weights)
+            regularization_module = RegularizedModule(fidelity_module=LogisticModule(weights=weights),
+                                                      regularization_module=L2(weights=weights), lam=self.lam_,
+                                                      include_intercept=self.include_intercept_, weights=weights)
         elif self.penalty_ == "none":
-            reg_module = LogisticModule()
+            regularization_module = LogisticModule(weights=weights)
         else:
             raise ValueError("unknown module")
 
-        self.coefs_ = self.solver_.fit(X=X, y=y, f=reg_module)
+        self.coefs_ = self.solver_.fit(X=X, y=y, f=regularization_module)
 
     def _predict(self, X: np.ndarray) -> np.ndarray:
         """
@@ -122,7 +123,11 @@ class LogisticRegression(BaseEstimator):
         responses : ndarray of shape (n_samples, )
             Predicted responses of given samples
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.c_[np.ones(X.shape[0]), X]
+
+        prob = self.predict_proba(X)
+        return np.where(prob >= self.alpha_, 0, 1)
 
     def predict_proba(self, X: np.ndarray) -> np.ndarray:
         """
@@ -138,7 +143,15 @@ class LogisticRegression(BaseEstimator):
         probabilities: ndarray of shape (n_samples,)
             Probability of each sample being classified as `1` according to the fitted model
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.c_[np.ones(X.shape[0]), X]
+
+        # return 1 / (1 + np.e ^ -np.dot(X, self.coefs_))
+        def compute_logistic(X: np.ndarray, coefs: np.ndarray) -> np.ndarray:
+            linear_scores = np.dot(X, coefs)
+            return 1 / (1 + np.exp(-linear_scores))
+
+        return compute_logistic(X, self.coefs_)
 
     def _loss(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -157,4 +170,12 @@ class LogisticRegression(BaseEstimator):
         loss : float
             Performance under misclassification error
         """
-        raise NotImplementedError()
+        if self.include_intercept_:
+            X = np.c_[np.ones(X.shape[0]), X]
+
+        misclassification_error = np.mean(self.predict_proba(X) != y)
+        return float(misclassification_error)
+
+
+
+
