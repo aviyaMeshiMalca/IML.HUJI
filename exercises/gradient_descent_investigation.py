@@ -230,16 +230,16 @@ def fit_logistic_regression():
     # 9. Find the optimal alpha and calculate the model's test error
     alpha_values = np.linspace(0, 1, 100)
     tpr_minus_fpr = []
-    for alpha in alpha_values:
-        y_pred = (y_pred_prob >= alpha).astype(int)
-        tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
-        tpr_minus_fpr.append(tp / (tp + fn) - fp / (fp + tn))
-
+    for alpha_vlaue in alpha_values:
+        y_prediction = np.array(list(map(int, y_pred_prob >= alpha_vlaue)))
+        true_negative, false_positive, false_negative, true_positive = confusion_matrix(y_test, y_prediction).ravel()
+        tpr_minus_fpr.append(true_positive / (true_positive + false_negative) - false_positive /
+                             (false_positive + true_negative))
     optimal_alpha = alpha_values[np.argmax(tpr_minus_fpr)]
-    y_pred_optimal = (y_pred_prob >= optimal_alpha).astype(int)
+    y_pred_optimal = np.array(list(map(int, y_pred_prob >= optimal_alpha)))
     test_error = 1 - accuracy_score(y_test, y_pred_optimal)
-    print("Optimal alpha:", optimal_alpha)
-    print("Model's test error:", test_error)
+    print(f"Optimal alpha:{optimal_alpha}")
+    print(f"Model's test error: {test_error}")
 
 
 if __name__ == '__main__':
