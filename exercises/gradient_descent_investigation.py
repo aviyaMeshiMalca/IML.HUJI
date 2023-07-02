@@ -2,8 +2,6 @@ import numpy as np
 import pandas as pd
 from typing import Tuple, List, Callable, Type
 
-from matplotlib import pyplot as plt
-
 from IMLearn import BaseModule
 from IMLearn.desent_methods import GradientDescent, FixedLR, ExponentialLR
 from IMLearn.desent_methods.modules import L1, L2
@@ -22,8 +20,6 @@ class Callback:
                           grad: np.ndarray, t: int, eta: float, delta: float):
         self.values_list.append(float(val))
         self.weights_list.append(weights)
-        # print("callback append w_t to list", weights)
-        # print("callback append val to list", val)
 
 
 def plot_descent_path(module: Type[BaseModule],
@@ -67,7 +63,7 @@ def plot_descent_path(module: Type[BaseModule],
 
     from utils import decision_surface
 
-    print( "shape: ", descent_path.shape)
+    print("shape: ", descent_path.shape)
 
     return go.Figure([decision_surface(predict_, xrange=xrange, yrange=yrange, density=70, showscale=False),
                       go.Scatter(x=descent_path[:, 0], y=descent_path[:, 1], mode="markers+lines",
@@ -108,8 +104,12 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
 
     modules = [L1, L2]
 
+    figL1 = go.Figure()
+    figL2 = go.Figure()
+
     for eta in etas:
         for module in modules:
+
             curr_callback = my_get_gd_state_recorder_callback()
             lr = FixedLR(eta)
             GD = GradientDescent(learning_rate=lr, callback=curr_callback.callback_function).fit(f=module(init),
@@ -119,30 +119,39 @@ def compare_fixed_learning_rates(init: np.ndarray = np.array([np.sqrt(2), np.e /
             if len(curr_callback.weights_list) != len(curr_callback.values_list):
                 raise ValueError("len(curr_callback.weights_list) != len(curr_callback.values_list)")
 
-            descent_path = np.array(curr_callback.weights_list)
-            print("before pass descent_path :shape: ", descent_path.shape)
+            # descent_path = np.array(curr_callback.weights_list)
 
-            fig = plot_descent_path(module=module, descent_path=descent_path,
-                                     title="of Module :{}, eta : {}".format(module.__name__, eta))
-            fig.show(renderer='browser')
-
-            # 2 Describe two phenomena that can be seen in the descent path of the ℓ1 objective when using
-            # GD and a fixed learning rate.
+            # fig = plot_descent_path(module=module, descent_path=descent_path,
+            #                          title="of Module :{}, eta : {}".format(module.__name__, eta))
+            # fig.show(renderer='browser')
 
             # 3 For each of the modules, plot the convergence rate (i.e. the norm as a function of the GD
             # iteration) for all specified learning rates. Explain your results
             # module_convergence_norm = [np.linalg.norm(weights) for weights in weights_list]
-            plt.plot(curr_callback.values_list, label="L1")
-            plt.xlabel("GD Iteration")
-            plt.ylabel("Norm of Weights")
-            plt.title("Convergence Rate for Module : {}, with Learning Rate = {}".format(module.__name__, eta))
-            plt.legend()
-            plt.show()
+
+            if module == L2:
+                figure = figL2
+            elif module == L1:
+                figure = figL1
+            else:
+                raise ValueError("unknown module")
+
+            figure.add_trace(go.Scatter(x=list(range(len(curr_callback.values_list))),
+                                        y=curr_callback.values_list))
+
+    figL1.update_layout(title="Convergence Rate for Module L1 with Different Learning Rates",
+                        xaxis_title="GD Iteration",
+                        yaxis_title="Norm of Weights")
+
+    figL2.update_layout(title="Convergence Rate for Module L2 with Different Learning Rates",
+                        xaxis_title="GD Iteration",
+                        yaxis_title="Norm of Weights")
+
+    figL1.show(renderer='browser')
+    figL2.show(renderer='browser')
 
 
-
-
-# not neccesary to submit!!
+# not necessary to submit!!
 def compare_exponential_decay_rates(init: np.ndarray = np.array([np.sqrt(2), np.e / 3]),
                                     eta: float = .1,
                                     gammas: Tuple[float] = (.9, .95, .99, 1)):
